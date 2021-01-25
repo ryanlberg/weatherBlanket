@@ -13,25 +13,19 @@ import (
 )
 
 type resp struct {
-	Hourly []weatherdata `json:"hourly"`
+	Daily []weatherdata `json:"daily"`
 }
 type weatherdata struct {
-	Temp float32 `json:"temp"`
+	Wd temperature `json:"temp"`
+}
+
+type temperature struct {
+	Max float32 `json:"max"`
 }
 
 func genResponse(lat, lon float32, date int64, key string) string {
-	req := fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=%f&lon=%f&units=imperial&dt=%d&appid=%s", lat, lon, date, key)
+	req := fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?lat=%f&lon=%f&exclude=current,minutely,hourly,alerts&units=imperial&appid=%s", lat, lon, key)
 	return req
-}
-
-func getAverage(temps []weatherdata) float32 {
-	var sum float32
-	for _, entry := range temps {
-		sum += entry.Temp
-	}
-
-	return sum / float32(len(temps))
-
 }
 
 func getColor(temp float32) string {
@@ -82,6 +76,7 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +85,8 @@ func main() {
 	var responseObject resp
 	json.Unmarshal(data, &responseObject)
 
-	var temp = getAverage(responseObject.Hourly)
-	fmt.Println(getColor(temp))
+	var temp = responseObject.Daily[0].Wd.Max
+
+	fmt.Println(temp, getColor(temp))
 
 }
