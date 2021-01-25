@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"./config"
 )
 
 type resp struct {
@@ -61,7 +63,18 @@ func getDate() int64 {
 }
 
 func main() {
-	key := "de2e05a9ffcc0fcb5529b2f6d7f1e8db"
+	file, err := os.Open("./config/key.config")
+	if err != nil {
+		panic(err)
+	}
+	var con config.Configuration
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&con)
+	if err != nil {
+		panic(err)
+	}
+
+	key := con.Key
 	request := genResponse(28.5383, -81.3792, getDate(), key)
 
 	response, err := http.Get(request)
